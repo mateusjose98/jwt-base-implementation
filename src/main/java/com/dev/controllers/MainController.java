@@ -25,4 +25,11 @@ public class MainController {
     public String operador() {
         return "Seu acesso foi autozado para a área de operador";
     }
+
+    // localhost:8080/api/outra-requisicao
+    @GetMapping(value = "/outra-requisicao")
+    public String outraRota() {
+        return "Apenas autenticação com QUALQUER usuário foi requerida!";
+    }
+
 }
