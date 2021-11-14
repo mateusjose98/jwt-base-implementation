@@ -23,6 +23,17 @@ public class UsuarioService implements UserDetailsService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+
+    public UserDetails autenticar(Usuario usuario) {
+        UserDetails u = loadUserByUsername(usuario.getLogin());
+         boolean senhasOk = passwordEncoder.matches(usuario.getSenha(), u.getPassword());
+        if(senhasOk){
+            return u;
+        }
+
+        throw new RuntimeException("Senha inválida");
+    }
+
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         Usuario usuario = usuarioRepository

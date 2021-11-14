@@ -1,15 +1,19 @@
 package com.dev.configurations;
 
 
+import com.dev.filters.JwtAuthFiltro;
+import com.dev.service.JwtService;
 import com.dev.service.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.filter.OncePerRequestFilter;
 
 @EnableWebSecurity
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
@@ -18,6 +22,15 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Autowired
     private UsuarioService usuarioService;
 
+    @Autowired
+    private JwtService jwtService;
+
+    //JWT INJEÇÃO DO FILTRO
+    @Bean
+    public OncePerRequestFilter jwtFilter() {
+        return new JwtAuthFiltro(jwtService, usuarioService);
+    }
+
     // CRIPTOGRAFIA DE SENHAS
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -25,10 +38,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     }
 
     // CONFIGURAÇÕES DE AUTENTICAÇÃO (1)
+    /*
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
         // EM MEMÓRIA
-        /*
+
         auth
                 .inMemoryAuthentication()
                 .passwordEncoder(passwordEncoder())
@@ -40,12 +54,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .withUser("MARIA")
                 .password(passwordEncoder().encode("000"))
                 .roles("ADMIN")
-        */
+
         auth
                 .userDetailsService(usuarioService)
                 .passwordEncoder(passwordEncoder())
         ;
-    }
+    }*/
 
     // CONFIGURAÇÕES DE AUTORIZAÇÃO (2)
     @Override
@@ -58,10 +72,15 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/api/admin/acesso-admin").hasRole("ADMIN")
                 .antMatchers("/api/public").permitAll()
                 .antMatchers("/api/cadastrar-usuario").permitAll()
+                .antMatchers("/api/auth/login").permitAll()
                 .antMatchers("/h2-console/**").permitAll()
                 .anyRequest().authenticated()
         // .and().formLogin(); // BASEADA EM UM FORMULÁRIO POST /login {name:username, name:password}
-                .and().httpBasic()
+                .and()
+                .sessionManagement()
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                .and()
+                .addFilterBefore( jwtFilter(), UsernamePasswordAuthenticationFilter.class); // EXECUTA NOSSO FILTRO ANTES DO PADRÃO SPRING
                 ;
 
 

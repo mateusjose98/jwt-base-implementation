@@ -5,7 +5,6 @@ import com.dev.service.UsuarioService;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
-import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import javax.servlet.FilterChain;
@@ -26,7 +25,7 @@ public class JwtAuthFiltro extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String authorization = request.getHeader("Authorization");
-        if (StringUtils.hasLength(authorization) && authorization.startsWith("Bearer ")){
+        if (authorization != null && authorization.startsWith("Bearer")){
             String token = authorization.split(" ")[1];
             if (jwtService.tokenValido(token)) {
                 var loginUsuario = jwtService.objetLoginUsuario(token);
