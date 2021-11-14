@@ -1,5 +1,6 @@
 package com.dev.service;
 
+import com.dev.model.Usuario;
 import com.dev.repositories.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.User;
@@ -8,6 +9,10 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import javax.transaction.Transactional;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class UsuarioService implements UserDetailsService {
@@ -20,9 +25,23 @@ public class UsuarioService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        Usuario usuario = usuarioRepository
+                .findByLogin(username)
+                .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado!"));
+
+        List<String> roles = usuario.getRoles().stream().map(i -> i.getNome()).collect(Collectors.toList());
+
+        return User.builder()
+                .username(usuario.getLogin())
+                .password(usuario.getSenha())
+                .roles(roles.toArray(new String[0]))
+                .build();
 
 
 
+
+    // MOCK
+        /*
         if (!username.equals("MATEUS")) {
             System.out.println(username);
 
@@ -35,5 +54,11 @@ public class UsuarioService implements UserDetailsService {
                 .password(passwordEncoder.encode("123"))
                 .roles("OPERADOR", "ADMIN")
                 .build();
+        */
+    }
+
+    @Transactional
+    public Usuario salvar(Usuario usr) {
+        return usuarioRepository.save(usr);
     }
 }
